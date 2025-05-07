@@ -107,10 +107,15 @@ def get_translation(key, lang, *args):
 
 # Sample menus for multiple business types
 menus = {
-    "restaurant": {
-        "shawarma": 2.5,
-        "burger": 3.5,
-        "pizza": 4.0
+    "mcdonalds": {
+        "big mac": 5.0,
+        "quarter pounder": 4.5,
+        "mcchicken": 3.5,
+        "nuggets": 4.0,
+        "fries": 2.0,
+        "mcflurry": 2.5,
+        "coke": 1.5,
+        "happy meal": 4.0
     },
     "supermarket": {
         "water": 0.5,
@@ -124,18 +129,24 @@ menus = {
 }
 
 calories = {
-    "shawarma": 420,
-    "burger": 550,
-    "pizza": 800,
-    "water": 0,
-    "bread": 250,
-    "panadol": 0
+    "big mac": 563,
+    "quarter pounder": 520,
+    "mcchicken": 400,
+    "nuggets": 170,
+    "fries": 320,
+    "mcflurry": 340,
+    "coke": 150,
+    "happy meal": 475
 }
 
 ingredients = {
-    "shawarma": "Chicken, garlic sauce, pickles, wrap",
-    "burger": "Beef patty, lettuce, tomato, cheese, bun",
-    "pizza": "Cheese, tomato sauce, dough, toppings"
+    "big mac": "Two beef patties, special sauce, lettuce, cheese, pickles, onions, sesame seed bun",
+    "quarter pounder": "Quarter pound beef patty, cheese, onions, pickles, mustard, ketchup",
+    "mcchicken": "Breaded chicken patty, lettuce, mayo, toasted bun",
+    "nuggets": "White boneless chicken, tempura batter, vegetable oil",
+    "fries": "Potatoes, vegetable oil, salt",
+    "mcflurry": "Vanilla soft serve, OREO® cookie pieces",
+    "happy meal": "Cheeseburger/Nuggets, small fries, apple slices, drink"
 }
 
 menu_images = {
@@ -157,8 +168,8 @@ def normalize_arabic_numbers(text):
     return text
 
 def detect_business_type(text):
-    if any(word in text for word in ["restaurant", "مطعم", "shawarma", "burger", "بيتزا"]):
-        return "restaurant"
+    if any(word in text for word in ["mcdonalds", "ماكدونالدز", "burger", "big mac", "nuggets"]):
+        return "mcdonalds"
     elif any(word in text for word in ["pharmacy", "صيدلية", "panadol"]):
         return "pharmacy"
     elif any(word in text for word in ["supermarket", "سوبر", "دخان", "مي", "ماء", "water"]):
