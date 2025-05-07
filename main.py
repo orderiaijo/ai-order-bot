@@ -143,8 +143,9 @@ def whatsapp():
         from_number = request.form.get("From", "")
         incoming_msg = normalize_arabic_numbers(request.form.get("Body", "").strip().lower())
         print(f"Received message: {incoming_msg} from {from_number}")  # Debug log
-    response = MessagingResponse()
-    msg = response.message()
+        
+        response = MessagingResponse()
+        msg = response.message()
 
     session = users.get(from_number, {"type": None, "order": {}, "lang": None})
 
@@ -227,12 +228,13 @@ def whatsapp():
         msg.body(get_translation("menu_prompt", current_lang))
         return str(response)
 
-    try:
-        msg.body(get_translation("order_help", current_lang))
+    msg.body(get_translation("order_help", current_lang))
+        return str(response)
     except Exception as e:
-        print(f"Error in response: {e}")  # Debug log
-        msg.body("An error occurred. Please try again.")
-    return str(response)
+        print(f"Error processing request: {e}")  # Debug log
+        response = MessagingResponse()
+        response.message("An error occurred. Please try again.")
+        return str(response)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
