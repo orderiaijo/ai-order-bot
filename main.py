@@ -144,16 +144,15 @@ def whatsapp():
     response = MessagingResponse()
     msg = response.message()
 
-    session = users.get(from_number, {"type": None, "order": {}})
+    session = users.get(from_number, {"type": None, "order": {}, "lang": None})
 
-    # Use stored language preference or detect from new message
-    lang = session.get("lang") or detect_language(incoming_msg)
-    session["lang"] = lang
+    # Always detect language from current message
+    current_lang = detect_language(incoming_msg)
+    session["lang"] = current_lang
     
     if session["type"] is None:
         session["type"] = detect_business_type(incoming_msg)
-        session["lang"] = detect_language(incoming_msg)
-        msg.body(get_translation("welcome", session["lang"], session["type"]))
+        msg.body(get_translation("welcome", current_lang, session["type"]))
         for img in menu_images.get(session["type"], []):
             msg.media(img)
         msg.body(get_translation("order_prompt", session["lang"]))
