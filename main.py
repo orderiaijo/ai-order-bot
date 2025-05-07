@@ -139,8 +139,10 @@ def index():
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
-    from_number = request.form.get("From", "")
-    incoming_msg = normalize_arabic_numbers(request.form.get("Body", "").strip().lower())
+    try:
+        from_number = request.form.get("From", "")
+        incoming_msg = normalize_arabic_numbers(request.form.get("Body", "").strip().lower())
+        print(f"Received message: {incoming_msg} from {from_number}")  # Debug log
     response = MessagingResponse()
     msg = response.message()
 
@@ -225,7 +227,11 @@ def whatsapp():
         msg.body(get_translation("menu_prompt", current_lang))
         return str(response)
 
-    msg.body(get_translation("order_help", current_lang))
+    try:
+        msg.body(get_translation("order_help", current_lang))
+    except Exception as e:
+        print(f"Error in response: {e}")  # Debug log
+        msg.body("An error occurred. Please try again.")
     return str(response)
 
 if __name__ == "__main__":
