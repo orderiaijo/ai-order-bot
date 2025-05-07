@@ -32,6 +32,34 @@ TRANSLATIONS = {
     "order_help": {
         "en": "🤖 I'm here to take your order. Type 'menu' to begin or item names like '2 shawarma'.",
         "ar": "🤖 أنا هنا لأخذ طلبك. اكتب 'منيو' للبدء أو اسم المنتج مثل '٢ شاورما'"
+    },
+    "order_summary": {
+        "en": "🧾 Order Summary:",
+        "ar": "🧾 ملخص الطلب:"
+    },
+    "subtotal": {
+        "en": "💰 Subtotal: {} JOD",
+        "ar": "💰 المجموع: {} دينار"
+    },
+    "delivery_fee": {
+        "en": "🚚 Delivery Fee: {} JOD",
+        "ar": "🚚 رسوم التوصيل: {} دينار"
+    },
+    "total": {
+        "en": "💳 Total: {} JOD",
+        "ar": "💳 المجموع الكلي: {} دينار"
+    },
+    "send_details": {
+        "en": "📍 Send location + name + pickup or delivery",
+        "ar": "📍 أرسل موقعك + اسمك + استلام أو توصيل"
+    },
+    "rate_request": {
+        "en": "🌟 Please rate your experience from 1 to 5, and share any feedback.",
+        "ar": "🌟 الرجاء تقييم تجربتك من ١ إلى ٥، وشاركنا رأيك."
+    },
+    "menu_prompt": {
+        "en": "📋 Here's our menu. Type what you'd like.",
+        "ar": "📋 هذه قائمتنا. اكتب ما تريد طلبه."
     }
 }
 
@@ -157,17 +185,17 @@ def whatsapp():
     if detected_order:
         session["order"].update(detected_order)
         users[from_number] = session
-        summary = "🧾 Order Summary:\n"
+        summary = get_translation("order_summary", lang) + "\n"
         total = 0
         for item, qty in session["order"].items():
             price = menus[session["type"]][item] * qty
-            summary += f"• {qty} × {item.title()} = {price:.2f} JOD\n"
+            summary += f"• {qty} × {item.title()} = {price:.2f} {'دينار' if lang == 'ar' else 'JOD'}\n"
             total += price
         delivery_fee = 2.00 if total < 10 else 1.00
-        summary += f"💰 Subtotal: {total:.2f} JOD\n"
-        summary += f"🚚 Delivery Fee: {delivery_fee:.2f} JOD\n"
-        summary += f"💳 Total: {(total + delivery_fee):.2f} JOD\n"
-        summary += f"📍 Send location + name + pickup or delivery"
+        summary += get_translation("subtotal", lang, f"{total:.2f}") + "\n"
+        summary += get_translation("delivery_fee", lang, f"{delivery_fee:.2f}") + "\n"
+        summary += get_translation("total", lang, f"{(total + delivery_fee):.2f}") + "\n"
+        summary += get_translation("send_details", lang)
         
         # Add quick reply suggestions where supported
         msg.body(summary)
@@ -181,7 +209,7 @@ def whatsapp():
         return str(response)
 
     if "rate" in incoming_msg or "قيمنا" in incoming_msg:
-        msg.body("🌟 Please rate your experience from 1 to 5, and share any feedback.")
+        msg.body(get_translation("rate_request", lang))
         return str(response)
 
     # Admin commands (simplified)
@@ -192,7 +220,7 @@ def whatsapp():
     if "شو حابب تطلب" in incoming_msg or "menu" in incoming_msg:
         for img in menu_images.get(session["type"], []):
             msg.media(img)
-        msg.body("📋 Here's our menu. Type what you'd like.")
+        msg.body(get_translation("menu_prompt", lang))
         return str(response)
 
     msg.body(get_translation("order_help", lang))
