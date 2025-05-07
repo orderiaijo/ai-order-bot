@@ -1,22 +1,27 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request
+from twilio.twiml.messaging_response import MessagingResponse
+import logging
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route("/", methods=['GET'])
 def home():
-    return "✅ AI Order Bot is running."
+    return "✅ App is live."
 
-@app.route("/order", methods=["POST"])
-def order():
-    data = request.get_json()
-    message = data.get("message", "").lower()
+@app.route("/whatsapp", methods=['POST'])
+def whatsapp():
+    incoming_msg = request.form.get('Body', '').strip()
+    print(f"Received: {incoming_msg}")  # DEBUG: log message to console
 
-    if "shawarma" in message:
-        return jsonify({"reply": "👍 You ordered Shawarma. Confirm with 'yes' or type again."})
-    elif "menu" in message:
-        return jsonify({"reply": "🍽️ Our menu: Shawarma, Burger, Salad"})
+    response = MessagingResponse()
+    msg = response.message()
+
+    if "menu" in incoming_msg.lower():
+        msg.body("📋 Here’s our menu:\n1. Burger\n2. Pizza\n3. Salad\nReply with your choice.")
     else:
-        return jsonify({"reply": "👋 Welcome! Please tell me what you'd like to order."})
+        msg.body("👋 Welcome! Type 'menu' to see our options.")
+
+    return str(response)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(debug=True, host='0.0.0.0', port=10000)
