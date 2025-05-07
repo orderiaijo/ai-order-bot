@@ -1,11 +1,39 @@
 
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from cachetools import TTLCache
 import re
 import difflib
 import string
+import time
+import logging
+from functools import lru_cache
 
 app = Flask(__name__)
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# Cache for menus and translations (1 hour TTL)
+menu_cache = TTLCache(maxsize=100, ttl=3600)
+translation_cache = TTLCache(maxsize=1000, ttl=3600)
+
+# In-memory metrics
+metrics = {
+    'requests': 0,
+    'errors': 0,
+    'response_times': []
+}
 
 # Arabic translations
 TRANSLATIONS = {
@@ -69,9 +97,13 @@ def detect_language(text):
         return "ar"
     return "en"
 
+@lru_cache(maxsize=1000)
 def get_translation(key, lang, *args):
-    translation = TRANSLATIONS.get(key, {}).get(lang, TRANSLATIONS[key]["en"])
-    return translation.format(*args) if args else translation
+    cache_key = f"{key}:{lang}"
+    if cache_key not in translation_cache:
+        translation = TRANSLATIONS.get(key, {}).get(lang, TRANSLATIONS[key]["en"])
+        translation_cache[cache_key] = translation
+    return translation_cache[cache_key].format(*args) if args else translation_cache[cache_key]
 
 # Sample menus for multiple business types
 menus = {
@@ -138,7 +170,10 @@ def index():
     return "✅ AI WhatsApp Ordering Bot is live."
 
 @app.route("/whatsapp", methods=["POST"])
+@limiter.limit("100/minute")  # Rate limiting
 def whatsapp():
+    start_time = time.time()
+    metrics['requests'] += 1
     try:
         from_number = request.form.get("From", "")
         incoming_msg = normalize_arabic_numbers(request.form.get("Body", "").strip().lower())
@@ -236,5 +271,14 @@ def whatsapp():
         response.message("An error occurred. Please try again.")
         return str(response)
 
+@app.route("/metrics", methods=["GET"])
+def get_metrics():
+    return {
+        'total_requests': metrics['requests'],
+        'total_errors': metrics['errors'],
+        'avg_response_time': sum(metrics['response_times'][-100:]) / len(metrics['response_times'][-100:]) if metrics['response_times'] else 0,
+        'cache_size': len(translation_cache)
+    }
+
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=False, host="0.0.0.0", port=5000)
