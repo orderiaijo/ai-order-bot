@@ -35,16 +35,16 @@ def build_menu_response(shop_name):
     menu = admin_users[shop_name]["menu"]
     if not menu:
         return "📭 Menu is currently empty. Please update it first."
-    response = "📋 Current Menu:
-"
+    response = """📋 Current Menu:
+"""
     for item, price in menu.items():
         response += f"• {item}: {price:.2f} JOD
 "
     return response
 
 def confirm_order(order_items):
-    response = "🧾 Your Order Summary:
-"
+    response = """🧾 Your Order Summary:
+"""
     total = 0
     for item, qty in order_items.items():
         price = admin_users[default_shop]["menu"].get(item, 0)
@@ -148,7 +148,7 @@ def whatsapp():
 
 # Render-compatible run
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=10000)
+    app.run(host='0.0.0.0', port=5000)
 
 
 
