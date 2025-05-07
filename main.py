@@ -146,8 +146,8 @@ def whatsapp():
         
         response = MessagingResponse()
         msg = response.message()
-
-    session = users.get(from_number, {"type": None, "order": {}, "lang": None})
+        
+        session = users.get(from_number, {"type": None, "order": {}, "lang": None})
 
     # Always detect language from current message
     current_lang = detect_language(incoming_msg)
