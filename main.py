@@ -161,18 +161,18 @@ def whatsapp():
 
     # Reset session after order
     if any(word in incoming_msg for word in ["done", "restart", "جديد", "ابدأ"]):
-        users[from_number] = {"type": None, "order": {}}
-        msg.body(get_translation("restart", lang))
+        users[from_number] = {"type": None, "order": {}, "lang": current_lang}
+        msg.body(get_translation("restart", current_lang))
         return str(response)
 
     # Handle calorie and ingredients
     for item in menus[session["type"]]:
         if item in incoming_msg:
             if "calorie" in incoming_msg or "كالوري" in incoming_msg:
-                msg.body(f"🔍 {item.title()} has ~{calories.get(item, 'N/A')} calories.")
+                msg.body(get_translation("calories", current_lang, item.title(), calories.get(item, 'N/A')))
                 return str(response)
             if "مكونات" in incoming_msg or "ingredients" in incoming_msg:
-                msg.body(f"📦 {item.title()} contains: {ingredients.get(item, 'Unknown')}")
+                msg.body(get_translation("ingredients", current_lang, item.title(), ingredients.get(item, 'Unknown')))
                 return str(response)
 
     # Fuzzy matching for item recognition
@@ -187,17 +187,17 @@ def whatsapp():
     if detected_order:
         session["order"].update(detected_order)
         users[from_number] = session
-        summary = get_translation("order_summary", lang) + "\n"
+        summary = get_translation("order_summary", current_lang) + "\n"
         total = 0
         for item, qty in session["order"].items():
             price = menus[session["type"]][item] * qty
-            summary += f"• {qty} × {item.title()} = {price:.2f} {'دينار' if lang == 'ar' else 'JOD'}\n"
+            summary += f"• {qty} × {item.title()} = {price:.2f} {'دينار' if current_lang == 'ar' else 'JOD'}\n"
             total += price
         delivery_fee = 2.00 if total < 10 else 1.00
-        summary += get_translation("subtotal", lang, f"{total:.2f}") + "\n"
-        summary += get_translation("delivery_fee", lang, f"{delivery_fee:.2f}") + "\n"
-        summary += get_translation("total", lang, f"{(total + delivery_fee):.2f}") + "\n"
-        summary += get_translation("send_details", lang)
+        summary += get_translation("subtotal", current_lang, f"{total:.2f}") + "\n"
+        summary += get_translation("delivery_fee", current_lang, f"{delivery_fee:.2f}") + "\n"
+        summary += get_translation("total", current_lang, f"{(total + delivery_fee):.2f}") + "\n"
+        summary += get_translation("send_details", current_lang)
         
         # Add quick reply suggestions where supported
         msg.body(summary)
