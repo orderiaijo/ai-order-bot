@@ -122,8 +122,21 @@ def whatsapp():
             price = menus[session["type"]][item] * qty
             summary += f"• {qty} × {item.title()} = {price:.2f} JOD\n"
             total += price
-        summary += f"💰 Total: {total:.2f} JOD\n📍 Send location + name + pickup or delivery."
+        delivery_fee = 2.00 if total < 10 else 1.00
+        summary += f"💰 Subtotal: {total:.2f} JOD\n"
+        summary += f"🚚 Delivery Fee: {delivery_fee:.2f} JOD\n"
+        summary += f"💳 Total: {(total + delivery_fee):.2f} JOD\n"
+        summary += f"📍 Send location + name + pickup or delivery"
+        
+        # Add quick reply suggestions where supported
         msg.body(summary)
+        msg.options([
+            "Send Location 📍",
+            "Pickup 🏃",
+            "Delivery 🚚",
+            "Add More Items ➕",
+            "Start Over 🔄"
+        ])
         return str(response)
 
     if "rate" in incoming_msg or "قيمنا" in incoming_msg:
