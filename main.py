@@ -211,7 +211,7 @@ def whatsapp():
         return str(response)
 
     if "rate" in incoming_msg or "قيمنا" in incoming_msg:
-        msg.body(get_translation("rate_request", lang))
+        msg.body(get_translation("rate_request", current_lang))
         return str(response)
 
     # Admin commands (simplified)
@@ -222,10 +222,10 @@ def whatsapp():
     if "شو حابب تطلب" in incoming_msg or "menu" in incoming_msg:
         for img in menu_images.get(session["type"], []):
             msg.media(img)
-        msg.body(get_translation("menu_prompt", lang))
+        msg.body(get_translation("menu_prompt", current_lang))
         return str(response)
 
-    msg.body(get_translation("order_help", lang))
+    msg.body(get_translation("order_help", current_lang))
     return str(response)
 
 if __name__ == "__main__":
