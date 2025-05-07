@@ -3,8 +3,47 @@ from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 import re
 import difflib
+import string
 
 app = Flask(__name__)
+
+# Arabic translations
+TRANSLATIONS = {
+    "welcome": {
+        "en": "👋 Welcome! You're now browsing the {} menu.",
+        "ar": "👋 مرحباً! أنت الآن تتصفح قائمة {}"
+    },
+    "order_prompt": {
+        "en": "📋 Type item name and quantity to order, e.g. 2 shawarma.",
+        "ar": "📋 اكتب اسم المنتج والكمية للطلب، مثال: ٢ شاورما"
+    },
+    "restart": {
+        "en": "🔄 Restarting your session. What would you like to order today?",
+        "ar": "🔄 تم إعادة تشغيل الجلسة. ماذا تريد أن تطلب اليوم؟"
+    },
+    "calories": {
+        "en": "🔍 {} has ~{} calories.",
+        "ar": "🔍 {} يحتوي على ~{} سعرة حرارية"
+    },
+    "ingredients": {
+        "en": "📦 {} contains: {}",
+        "ar": "📦 {} يحتوي على: {}"
+    },
+    "order_help": {
+        "en": "🤖 I'm here to take your order. Type 'menu' to begin or item names like '2 shawarma'.",
+        "ar": "🤖 أنا هنا لأخذ طلبك. اكتب 'منيو' للبدء أو اسم المنتج مثل '٢ شاورما'"
+    }
+}
+
+def detect_language(text):
+    # Check if text contains Arabic characters
+    if any(ord(char) in range(0x0600, 0x06FF) for char in text):
+        return "ar"
+    return "en"
+
+def get_translation(key, lang, *args):
+    translation = TRANSLATIONS.get(key, {}).get(lang, TRANSLATIONS[key]["en"])
+    return translation.format(*args) if args else translation
 
 # Sample menus for multiple business types
 menus = {
@@ -79,19 +118,21 @@ def whatsapp():
 
     session = users.get(from_number, {"type": None, "order": {}})
 
+    lang = detect_language(incoming_msg)
+    
     if session["type"] is None:
         session["type"] = detect_business_type(incoming_msg)
-        msg.body(f"👋 Welcome! You're now browsing the {session['type']} menu.")
+        msg.body(get_translation("welcome", lang, session["type"]))
         for img in menu_images.get(session["type"], []):
             msg.media(img)
-        msg.body("📋 Type item name and quantity to order, e.g. 2 shawarma.")
+        msg.body(get_translation("order_prompt", lang))
         users[from_number] = session
         return str(response)
 
     # Reset session after order
-    if "done" in incoming_msg or "restart" in incoming_msg:
+    if any(word in incoming_msg for word in ["done", "restart", "جديد", "ابدأ"]):
         users[from_number] = {"type": None, "order": {}}
-        msg.body("🔄 Restarting your session. What would you like to order today?")
+        msg.body(get_translation("restart", lang))
         return str(response)
 
     # Handle calorie and ingredients
@@ -154,7 +195,7 @@ def whatsapp():
         msg.body("📋 Here's our menu. Type what you'd like.")
         return str(response)
 
-    msg.body("🤖 I'm here to take your order. Type 'menu' to begin or item names like '2 shawarma'.")
+    msg.body(get_translation("order_help", lang))
     return str(response)
 
 if __name__ == "__main__":
